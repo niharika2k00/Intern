@@ -1,0 +1,7 @@
+
+variable "place" {
+  description = "name of the place"
+  type        = string
+  default     = "kolkata" 
+}
+
