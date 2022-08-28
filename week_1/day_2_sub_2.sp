@@ -1,6 +1,6 @@
 
 //  Benchmark
-benchmark "s3" {
+benchmark "day_2_sub_2" {
   title = "Some controls of S3 Bucket"  
   children = [
     control.s3_bucket_versioning,
@@ -33,7 +33,7 @@ control "s3_bucket_istagged" {
 } 
 
 control "s3_bucket_versioning" {
-  title       = "S3 bucket versioning should be enabled"
+  title       = "S3 bucket versioning enabled"
   description = "Amazon Simple Storage Service (Amazon S3) bucket versioning helps keep multiple variants of an object in the same Amazon S3 bucket."
   everity     = "low"
   sql         = query.s3_bucket_versioning_enabled.sql

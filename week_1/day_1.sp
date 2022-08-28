@@ -1,5 +1,5 @@
 
-/* 
+/*
 ARN  ->  Amazon Resource Name (ARN) parameter
 
 Queries ->    steampipe dashboard
@@ -17,19 +17,24 @@ Queries ->    steampipe dashboard
 
 
   The MOD contains BENCHMARK    =>    BENCHMARK contains CONTROLS   =>    CONTROLS contains QUERIES.
-
 */
 
 //  Global Variables
-variable "place" {
+variable "place1" {
   description = "name of the place"
   type        = string
-  default     = "kolkata" 
+  default     = "kolkata"
+}
+
+variable "place2" {
+  description = "A list of cost centers associated with s3 bucket."
+  type    = list(string)
+  default = ["kolkata","kashmir"]
 }
 
 //  Benchmark
-benchmark "combine" {
-  title = "Turbot Training"  
+benchmark "day_1" {
+  title = "Turbot Training Day-1"
   children = [
     control.cost_center,
     control.lambda,
@@ -60,7 +65,7 @@ control "s3_bucket" {
     from
       aws_s3_bucket
   EOT
-} 
+}
 
 control "lambda" {
   title = "Lambda Untagged"
@@ -92,15 +97,15 @@ control "cost_center" {
   severity    = "low"
 
   sql = <<-EOT
-    select    
-    -- Requirement Dimensions      
+    select
+    -- Requirement Dimensions
       arn as resource,
       case
         when tags is not null and tags ->> 'cost_center'='kolkata' then 'ok'
         else 'alarm'
       end as status,
-      case 
-        when tags is not null and tags ->> 'cost_center'='kolkata' then name 
+      case
+        when tags is not null and tags ->> 'cost_center'='kolkata' then name
         else 'resource with no tag'
       end as reason,
     -- Additional Dimensions
@@ -111,7 +116,7 @@ control "cost_center" {
   EOT
 }
 
-control "cost_center_modified" {
+control "cost_center_modified" {  
   title       = "Cost Center Untagged"
   description = "This control print the names,tags of the resouce from S3 Bucket whose cost center is kolkata."
   severity    = "low"
@@ -138,27 +143,39 @@ control "cost_center_modified" {
   EOT
 
  //  passing variables in params
-  param "place" {
-    default = "kolkata"
-  }
+  # param "place" {
+  #   default = "kolkata"
+  # }
 
  //  passing variables in args
   # args = [var.place]
 }
 
-control "dummy" {
+//  steampipe check control.cost_center_modified --var=place="kolkata"
+//  steampipe check control.var_list
+control "var_list" {
   title       = "Cost Center Untagged"
   description = "This control print the names,tags of the resouce from S3 Bucket whose cost center is kolkata."
-  severity    = "low" 
+  severity    = "low"
+  sql         = query.s3_cost_center_validation_with_variables.sql
+  # args        = [var.place1]      # using single variable
+  args        = [var.place2]      # using list of variable
+}
+
+
+control "var" {
+  title       = "Cost Center Untagged"
+  description = "This control print the names,tags of the resouce from S3 Bucket whose cost center is kolkata."
+  severity    = "low"
   sql         = query.check.sql
-  args        = [var.place]
+  args        = [var.place1]
 }
 
 // Use Case --> to validate the tags having owner as turbot ("Owner":"Turbot") and versioning enabled (TRUE)
 control "validation" {
-  title       = "Validation Untagged"  
+  title       = "Validation Untagged"
   description = "This control returns the resources which have Turbot Owner and versioning enabled true."
-  severity    = "low"        
+  severity    = "low"
 
   sql = <<-EOT
     select
@@ -183,10 +200,10 @@ control "validation" {
     aws_s3_bucket
     order by status;
   EOT
-} 
+}
 
 control "s3_bucket_versioning_enabled" {
-  title       = "S3 bucket versioning should be enabled"
+  title       = "S3 bucket versioning enabled"
   description = "Amazon Simple Storage Service (Amazon S3) bucket versioning helps keep multiple variants of an object in the same "
   sql         = query.s3_bucket_versioning_enabled.sql
 }

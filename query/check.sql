@@ -12,7 +12,7 @@ select
     else 'cost enter is not kolkata'
   end as reason,
   -- Additional Dimensions
-  account_id,
-  region
+  region,
+  account_id
 from
   aws_s3_bucket;
